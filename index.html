@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Киноквиз — ретро-сеанс для киноманов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F2E4C9; --surface: #FFF7E6; --ink: #2B0A12; --muted: #6B3A42;
+  --accent: #8E1B2C; --accent-ink: #FFF7E6; --gold: #A87412; --gold-2: #D9A441;
+  --ok: #2F6B3A; --ok-bg: #DCEBD6; --bad: #A3241B; --bad-bg: #F6D9D3;
+  --line: #D7C09A; --bulb: #D9A441; --velvet: #6E1222;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16070B; --surface: #2A0D15; --ink: #F6E7C8; --muted: #CDB394;
+    --accent: #E9B949; --accent-ink: #1A0A0E; --gold: #E9B949; --gold-2: #F7D27A;
+    --ok: #8FD69A; --ok-bg: #1F3A24; --bad: #FF9A8A; --bad-bg: #4A1A1A;
+    --line: #4D1A26; --bulb: #F7D27A; --velvet: #4A0E1A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #16070B; --surface: #2A0D15; --ink: #F6E7C8; --muted: #CDB394;
+  --accent: #E9B949; --accent-ink: #1A0A0E; --gold: #E9B949; --gold-2: #F7D27A;
+  --ok: #8FD69A; --ok-bg: #1F3A24; --bad: #FF9A8A; --bad-bg: #4A1A1A;
+  --line: #4D1A26; --bulb: #F7D27A; --velvet: #4A0E1A;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: "Oswald", "Arial Narrow", "Segoe UI", Arial, sans-serif;
+  font-size: 1.1rem; line-height: 1.55;
+  border-inline: 10px solid var(--velvet);
+  min-height: 100vh;
+}
+:focus-visible { outline: 3px solid var(--gold-2); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+button { font: inherit; cursor: pointer; }
+.wrap { max-width: 44rem; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+.display { font-family: "Poiret One", "Didot", Georgia, serif; font-weight: 400; }
+
+/* Верхняя панель */
+.bar { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: 1rem; min-height: 2.75rem; }
+.bar .brand { font-family: "Poiret One", Georgia, serif; font-size: 1.5rem; letter-spacing: .04em; }
+.restart {
+  min-height: 2.75rem; padding: 0 1rem; border-radius: 2rem; border: 2px solid var(--line);
+  background: transparent; color: var(--ink); font-size: 1rem;
+}
+.restart.confirm { border-color: var(--bad); color: var(--bad); }
+
+/* Афиша с лампочками */
+.marquee {
+  text-align: center; padding: 2.6rem 1.5rem; margin: 1rem 0 1.5rem; border: 3px solid var(--gold);
+  border-radius: 1.25rem; color: var(--ink);
+  background:
+    radial-gradient(circle, var(--bulb) 0 4px, transparent 5px) 0 6px / 24px 24px repeat-x,
+    radial-gradient(circle, var(--bulb) 0 4px, transparent 5px) 0 calc(100% - 6px) / 24px 24px repeat-x,
+    var(--surface);
+}
+.marquee h1 { font-size: clamp(3rem, 13vw, 5.5rem); line-height: 1; margin: 0; letter-spacing: .06em; color: var(--accent); }
+.marquee p { margin: .6rem 0 0; font-size: 1.15rem; color: var(--muted); letter-spacing: .03em; }
+.rules { background: var(--surface); border: 2px solid var(--line); border-radius: 1rem; padding: 1.1rem 1.4rem; margin-bottom: 1.5rem; }
+.rules h2 { margin: 0 0 .4rem; font-size: 1.3rem; font-weight: 500; }
+.rules ul { margin: 0; padding-left: 1.2rem; }
+.best { text-align: center; color: var(--muted); margin: 0 0 1rem; }
+.cta {
+  display: block; width: 100%; min-height: 3.5rem; border: 0; border-radius: .9rem;
+  background: var(--accent); color: var(--accent-ink); font-size: 1.35rem; font-weight: 500; letter-spacing: .04em;
+}
+.cta:hover { filter: brightness(1.08); }
+
+/* Статус: прогресс, счёт, таймер */
+.status { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.status .info { flex: 1; }
+.status .step { font-size: 1.05rem; font-weight: 500; }
+.status .score { color: var(--muted); font-size: 1rem; }
+.film { display: flex; gap: 4px; margin-top: .4rem; }
+.film span { flex: 1; height: 10px; border-radius: 2px; background: var(--line); }
+.film span.done { background: var(--gold); }
+.film span.now { background: var(--accent); }
+.timer { position: relative; width: 4.2rem; height: 4.2rem; flex: none; }
+.timer svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.timer circle { fill: none; stroke-width: 7; }
+.timer .track { stroke: var(--line); }
+.timer .arc { stroke: var(--gold); stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke .3s; }
+.timer.low .arc { stroke: var(--bad); }
+.timer .sec { position: absolute; inset: 0; display: grid; place-items: center; font-size: 1.3rem; font-weight: 600; }
+
+/* Билет с вопросом */
+.ticket {
+  background: var(--surface); border: 2px solid var(--line); border-radius: 1rem; padding: 1.4rem 1.4rem 1.2rem;
+  position: relative;
+}
+.ticket::before, .ticket::after {
+  content: ""; position: absolute; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%;
+  background: var(--bg); border: 2px solid var(--line);
+}
+.ticket::before { left: -12px; border-left-color: transparent; border-bottom-color: transparent; transform: rotate(45deg); }
+.ticket::after { right: -12px; border-right-color: transparent; border-top-color: transparent; transform: rotate(45deg); }
+.kind { display: inline-block; font-size: .95rem; color: var(--gold); font-weight: 500; margin-bottom: .3rem; }
+.emoji { font-size: clamp(2.6rem, 10vw, 3.6rem); margin: .2rem 0 .4rem; letter-spacing: .15em; }
+.q { font-size: 1.35rem; line-height: 1.4; margin: 0 0 1.1rem; font-weight: 500; }
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .6rem; }
+.opt {
+  min-height: 3.2rem; text-align: left; padding: .6rem 1rem; border-radius: .7rem;
+  border: 2px dashed var(--line); background: var(--bg); color: var(--ink); font-size: 1.12rem;
+}
+.opt:hover:not([disabled]) { border-color: var(--gold); border-style: solid; }
+.opt[disabled] { cursor: default; }
+.opt.gone { opacity: .3; text-decoration: line-through; }
+.opt.right { border: 2px solid var(--ok); background: var(--ok-bg); color: var(--ink); }
+.opt.wrong { border: 2px solid var(--bad); background: var(--bad-bg); color: var(--ink); }
+
+/* Подсказки */
+.hints { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 .5rem; }
+.hint {
+  min-height: 2.75rem; padding: 0 1rem; border-radius: 2rem; border: 2px solid var(--gold);
+  background: transparent; color: var(--ink); font-size: 1rem;
+}
+.hint[disabled] { opacity: .4; cursor: not-allowed; text-decoration: line-through; }
+.say { min-height: 1px; }
+.bubble {
+  margin-top: .6rem; padding: .8rem 1rem; border-radius: 1rem 1rem 1rem .2rem; background: var(--surface);
+  border: 2px solid var(--line); max-width: 34rem;
+}
+.bubble b { color: var(--gold); font-weight: 500; }
+.ring { display: inline-block; animation: ring .5s ease-in-out infinite alternate; }
+@keyframes ring { from { transform: rotate(-12deg); } to { transform: rotate(12deg); } }
+
+.feedback { margin-top: 1rem; padding: 1rem 1.1rem; border-radius: .9rem; border: 2px solid var(--line); background: var(--surface); }
+.feedback.ok { border-color: var(--ok); }
+.feedback.bad { border-color: var(--bad); }
+.feedback h3 { margin: 0 0 .2rem; font-size: 1.25rem; font-weight: 600; }
+.feedback.ok h3 { color: var(--ok); }
+.feedback.bad h3 { color: var(--bad); }
+.feedback p { margin: 0 0 .8rem; }
+
+/* Финал */
+.final { text-align: center; }
+.trophy { width: min(15rem, 70%); height: auto; display: block; margin: 0 auto .5rem; }
+.trophy .g1 { fill: var(--gold); }
+.trophy .g2 { fill: var(--gold-2); }
+.trophy .hole { fill: var(--bg); }
+.trophy .ray { stroke: var(--gold-2); stroke-width: 3; stroke-linecap: round; opacity: .55; }
+.trophy .spark { fill: var(--gold-2); animation: twinkle 1.6s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+.trophy .spark:nth-of-type(2) { animation-delay: .5s; }
+.trophy .spark:nth-of-type(3) { animation-delay: 1s; }
+@keyframes twinkle { 0%,100% { opacity: .15; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.15); } }
+.final h1 { font-size: clamp(2.4rem, 9vw, 3.8rem); margin: 0; color: var(--accent); letter-spacing: .04em; }
+.final .total { font-size: 1.5rem; font-weight: 500; margin: .3rem 0 0; }
+.final .sub { color: var(--muted); margin: .2rem 0 1.5rem; }
+.tally { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .6rem; margin-bottom: 1.5rem; }
+.tally div { background: var(--surface); border: 2px solid var(--line); border-radius: .9rem; padding: .7rem; }
+.tally strong { display: block; font-size: 1.6rem; font-weight: 600; color: var(--gold); }
+.intro-bonus { text-align: center; }
+.intro-bonus .marquee h1 { font-size: clamp(2.4rem, 10vw, 4rem); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 30rem) { body { border-inline-width: 5px; } .q { font-size: 1.2rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <span class="brand" aria-hidden="true">🎞 Киноквиз</span>
+    <button type="button" class="restart" id="restart" hidden>↺ Заново</button>
+  </div>
+  <main id="screen" aria-live="polite"></main>
+</div>
+
+<script>
+/* ===== ВОПРОСЫ =====
+   answer — правильный вариант (текстом), director — подсказка «Режиссёр», fact — пояснение после ответа */
+const MAIN = [
+  { kind: "Угадай по актёрам", q: "В каком фильме 2010 года вместе снимались Леонардо Ди Каприо, Джозеф Гордон-Левитт и Том Харди?",
+    options: ["Начало", "Остров проклятых", "Выживший", "Отступники"], answer: "Начало",
+    director: "Кристофер Нолан", fact: "Герои фильма «Начало» проникают в чужие сны, чтобы украсть или подбросить идею." },
+  { kind: "Угадай год", q: "В каком году вышел фильм «Мстители: Финал»?",
+    options: ["2017", "2018", "2019", "2020"], answer: "2019",
+    director: "Энтони и Джо Руссо", fact: "Фильм завершил большую сагу Marvel о Камнях бесконечности." },
+  { kind: "Угадай по актёрам", q: "В каком фильме Роберт Дауни-младший впервые сыграл Тони Старка?",
+    options: ["Мстители", "Железный человек", "Невероятный Халк", "Капитан Америка: Первый мститель"], answer: "Железный человек",
+    director: "Джон Фавро", fact: "«Железный человек» 2008 года открыл киновселенную Marvel." },
+  { kind: "Угадай по актёрам", q: "Какой фильм с Томом Хэнксом в главной роли получил «Оскар» как лучший фильм года?",
+    options: ["Зелёная миля", "Изгой", "Форрест Гамп", "Спасти рядового Райана"], answer: "Форрест Гамп",
+    director: "Роберт Земекис", fact: "«Форрест Гамп» получил шесть «Оскаров», в том числе за лучший фильм и лучшую мужскую роль." },
+  { kind: "Угадай год", q: "В каком году вышла первая «Матрица»?",
+    options: ["1997", "1999", "2001", "2003"], answer: "1999",
+    director: "Лана и Лилли Вачовски", fact: "Знаменитый эффект замедленного времени из «Матрицы» потом копировали десятки фильмов." },
+  { kind: "Кыргызское кино · угадай год", q: "В каком году вышел фильм «Белый пароход» по повести Чингиза Айтматова?",
+    options: ["1965", "1975", "1985", "1995"], answer: "1975",
+    director: "Болотбек Шамшиев", fact: "Это история мальчика, который мечтает превратиться в рыбу и доплыть до белого парохода." },
+  { kind: "Кыргызское кино", q: "Как называется историческая драма 2014 года о правительнице Алая?",
+    options: ["Небо нашего детства", "Курманжан датка", "Свет-аке", "Белый пароход"], answer: "Курманжан датка",
+    director: "Садык Шер-Нияз", fact: "Главную роль Курманжан датки исполнила Элина Абай кызы." },
+  { kind: "Угадай по актёрам", q: "В каком фильме Marvel Чедвик Боузман сыграл короля Ваканды?",
+    options: ["Доктор Стрэндж", "Тор: Рагнарёк", "Чёрная пантера", "Человек-муравей"], answer: "Чёрная пантера",
+    director: "Райан Куглер", fact: "«Чёрная пантера» стала первым фильмом о супергероях, номинированным на «Оскар» за лучший фильм." },
+  { kind: "Угадай год", q: "В каком году вышел «Аватар» Джеймса Кэмерона?",
+    options: ["2007", "2009", "2011", "2013"], answer: "2009",
+    director: "Джеймс Кэмерон", fact: "«Аватар» долгое время был самым кассовым фильмом в истории." },
+  { kind: "Угадай по актёрам", q: "В каком фильме вместе снимались Мэттью Макконахи, Энн Хэтэуэй и Джессика Честейн?",
+    options: ["Марсианин", "Интерстеллар", "Гравитация", "Контакт"], answer: "Интерстеллар",
+    director: "Кристофер Нолан", fact: "В «Интерстелларе» экипаж ищет новый дом для человечества по ту сторону червоточины." }
+];
+
+const BONUS = [
+  { kind: "Бонус · угадай по эмодзи", emoji: "🦁👑🌅", q: "Какой фильм зашифрован?",
+    options: ["Мадагаскар", "Король Лев", "Книга джунглей", "Зверополис"], answer: "Король Лев",
+    director: "Роджер Аллерс и Роб Минкофф", fact: "Мультфильм 1994 года — одна из самых любимых историй Disney." },
+  { kind: "Бонус · угадай по эмодзи", emoji: "🚢🧊💔", q: "Какой фильм зашифрован?",
+    options: ["Пираты Карибского моря", "Жизнь Пи", "Титаник", "Аватар"], answer: "Титаник",
+    director: "Джеймс Кэмерон", fact: "«Титаник» получил 11 «Оскаров»." },
+  { kind: "Бонус · угадай по кадру", emoji: "🎬", q: "Кадр: мальчик на велосипеде взлетает в ночное небо на фоне огромной луны, а в корзине у руля сидит маленький инопланетянин.",
+    options: ["Назад в будущее", "Гремлины", "Инопланетянин", "Близкие контакты третьей степени"], answer: "Инопланетянин",
+    director: "Стивен Спилберг", fact: "Этот кадр стал эмблемой студии Спилберга." },
+  { kind: "Бонус · угадай по звуку", emoji: "🔊", q: "Звук: низкое гудение энергетического клинка и тяжёлое хриплое дыхание через чёрный шлем.",
+    options: ["Звёздный путь", "Звёздные войны", "Трон", "Дюна"], answer: "Звёздные войны",
+    director: "Джордж Лукас (создатель саги)", fact: "Звук дыхания злодея записали через маску акваланга." },
+  { kind: "Бонус · угадай по саундтреку", emoji: "🎵", q: "Саундтрек: две низкие ноты звучат по очереди, всё быстрее и громче. Зритель знает: сейчас из воды покажется плавник.",
+    options: ["Челюсти", "Пираньи", "Глубокое синее море", "Анаконда"], answer: "Челюсти",
+    director: "Стивен Спилберг", fact: "Эта простая тема композитора Джона Уильямса стала символом надвигающейся опасности." }
+];
+
+const FRIENDS = ["Азамат", "Бермет", "Тимур", "Айпери", "Нурлан", "Чолпон", "Эрлан", "Жылдыз"];
+const RANKS = [
+  { min: 13, title: "Легенда кинозала", text: "Вам можно доверить выбор фильма на любой вечер." },
+  { min: 10, title: "Кинокритик", text: "Вы знаете кино лучше, чем большинство зрителей в зале." },
+  { min: 6, title: "Завсегдатай кинотеатра", text: "Попкорн, последний ряд и хорошая память на фильмы." },
+  { min: 0, title: "Случайный зритель", text: "Отличный повод устроить киномарафон и вернуться за реваншем." }
+];
+const TIME = 60;
+
+/* ===== СОСТОЯНИЕ ===== */
+const screen = document.getElementById("screen");
+const restartBtn = document.getElementById("restart");
+let S, tick = null, restartArm = null;
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+const esc = s => { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; };
+const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+
+function newGame() {
+  stopTimer();
+  S = {
+    list: [...MAIN, ...BONUS].map(q => ({ ...q, options: shuffle(q.options) })),
+    i: 0, main: 0, bonus: 0, answered: false, left: TIME,
+    hints: { fifty: true, director: true, call: true }
+  };
+}
+
+/* ===== ЭКРАНЫ ===== */
+function renderStart() {
+  stopTimer(); restartBtn.hidden = true;
+  const best = store.get("kinoquiz-best");
+  screen.innerHTML = `
+    <div class="marquee"><h1 class="display">Киноквиз</h1><p>Ретро-сеанс для киноманов</p></div>
+    <div class="rules">
+      <h2>Программа сеанса</h2>
+      <ul>
+        <li>10 вопросов о мировых хитах, Marvel и кыргызском кино</li>
+        <li>Бонусный раунд: 5 вопросов по эмодзи, кадру, звуку и саундтреку</li>
+        <li>60 секунд на каждый вопрос</li>
+        <li>Три подсказки на всю игру: «50 на 50», «Режиссёр» и «Звонок знакомому»</li>
+      </ul>
+    </div>
+    ${best ? `<p class="best">Ваш лучший результат: ${esc(best)} из 15</p>` : ""}
+    <button type="button" class="cta" id="go">Начать сеанс</button>`;
+  document.getElementById("go").addEventListener("click", () => { newGame(); renderQuestion(); });
+  document.getElementById("go").focus();
+}
+
+function renderBonusIntro() {
+  stopTimer();
+  screen.innerHTML = `
+    <div class="intro-bonus">
+      <div class="marquee"><h1 class="display">Бонусный сеанс</h1><p>Основная программа: ${S.main} из 10</p></div>
+      <div class="rules"><p style="margin:0">Пять вопросов без кадров и звука: только эмодзи, описание сцены и ваша кинопамять. Неиспользованные подсказки остаются с вами.</p></div>
+      <button type="button" class="cta" id="go">Продолжить</button>
+    </div>`;
+  document.getElementById("go").addEventListener("click", renderQuestion);
+  document.getElementById("go").focus();
+}
+
+function renderQuestion() {
+  restartBtn.hidden = false;
+  const q = S.list[S.i];
+  const isBonus = S.i >= MAIN.length;
+  const num = isBonus ? S.i - MAIN.length + 1 : S.i + 1;
+  const total = isBonus ? BONUS.length : MAIN.length;
+  const offset = isBonus ? MAIN.length : 0;
+  S.answered = false; S.left = TIME;
+  const film = Array.from({ length: total }, (_, k) => `<span class="${k + 1 < num ? "done" : k + 1 === num ? "now" : ""}"></span>`).join("");
+  screen.innerHTML = `
+    <div class="status">
+      <div class="info">
+        <div class="step">${isBonus ? "Бонус" : "Вопрос"} ${num} из ${total}</div>
+        <div class="score">Счёт: ${S.main + S.bonus}</div>
+        <div class="film" aria-hidden="true">${film}</div>
+      </div>
+      <div class="timer" id="timer" role="timer" aria-label="Осталось секунд">
+        <svg viewBox="0 0 80 80" aria-hidden="true"><circle class="track" cx="40" cy="40" r="34"/><circle class="arc" id="arc" cx="40" cy="40" r="34" stroke-dasharray="213.6" stroke-dashoffset="0"/></svg>
+        <div class="sec" id="sec">${TIME}</div>
+      </div>
+    </div>
+    <article class="ticket">
+      <span class="kind">${esc(q.kind)}</span>
+      ${q.emoji ? `<div class="emoji" aria-hidden="true">${q.emoji}</div>` : ""}
+      <p class="q">${esc(q.q)}</p>
+      <div class="opts">${q.options.map((o, k) => `<button type="button" class="opt" data-k="${k}">${esc(o)}</button>`).join("")}</div>
+    </article>
+    <div class="hints" role="group" aria-label="Подсказки">
+      <button type="button" class="hint" id="h-fifty" ${S.hints.fifty ? "" : "disabled"}>✂ 50 на 50</button>
+      <button type="button" class="hint" id="h-director" ${S.hints.director ? "" : "disabled"}>🎬 Режиссёр</button>
+      <button type="button" class="hint" id="h-call" ${S.hints.call ? "" : "disabled"}>📞 Звонок знакомому</button>
+    </div>
+    <div class="say" id="say" aria-live="polite"></div>
+    <div id="fb"></div>`;
+  screen.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => answer(b.textContent)));
+  document.getElementById("h-fifty").addEventListener("click", useFifty);
+  document.getElementById("h-director").addEventListener("click", useDirector);
+  document.getElementById("h-call").addEventListener("click", useCall);
+  startTimer();
+}
+
+function answer(choice) {
+  if (S.answered) return;
+  S.answered = true; stopTimer();
+  const q = S.list[S.i];
+  const right = choice === q.answer;
+  if (right) { if (S.i >= MAIN.length) S.bonus++; else S.main++; }
+  screen.querySelectorAll(".opt").forEach(b => {
+    b.disabled = true;
+    if (b.textContent === q.answer) b.classList.add("right");
+    else if (b.textContent === choice) b.classList.add("wrong");
+  });
+  screen.querySelectorAll(".hint").forEach(b => b.disabled = true);
+  const last = S.i === S.list.length - 1;
+  const toBonus = S.i === MAIN.length - 1;
+  const title = choice === null ? "Время вышло" : right ? "Верно!" : "Мимо";
+  const lead = right ? "" : `Правильный ответ: «${esc(q.answer)}». `;
+  document.getElementById("fb").innerHTML = `
+    <div class="feedback ${right ? "ok" : "bad"}">
+      <h3>${title}</h3>
+      <p>${lead}${esc(q.fact)}</p>
+      <button type="button" class="cta" id="next">${last ? "Узнать результат" : toBonus ? "К бонусному раунду" : "Следующий вопрос"}</button>
+    </div>`;
+  const next = document.getElementById("next");
+  next.addEventListener("click", () => {
+    S.i++;
+    if (S.i >= S.list.length) renderFinal();
+    else if (S.i === MAIN.length) renderBonusIntro();
+    else renderQuestion();
+  });
+  next.focus();
+}
+
+/* ===== ТАЙМЕР ===== */
+function startTimer() {
+  stopTimer();
+  const arc = document.getElementById("arc"), sec = document.getElementById("sec"), box = document.getElementById("timer");
+  tick = setInterval(() => {
+    S.left--;
+    sec.textContent = S.left;
+    arc.setAttribute("stroke-dashoffset", (213.6 * (1 - S.left / TIME)).toFixed(1));
+    if (S.left <= 10) box.classList.add("low");
+    if (S.left <= 0) answer(null);
+  }, 1000);
+}
+function stopTimer() { if (tick) { clearInterval(tick); tick = null; } }
+
+/* ===== ПОДСКАЗКИ ===== */
+function say(html) { document.getElementById("say").insertAdjacentHTML("beforeend", `<div class="bubble">${html}</div>`); }
+
+function useFifty() {
+  if (!S.hints.fifty || S.answered) return;
+  S.hints.fifty = false; this.disabled = true;
+  const q = S.list[S.i];
+  const wrong = shuffle([...screen.querySelectorAll(".opt")].filter(b => b.textContent !== q.answer && !b.disabled)).slice(0, 2);
+  wrong.forEach(b => { b.disabled = true; b.classList.add("gone"); });
+  say("<b>50 на 50:</b> два неверных варианта убраны.");
+}
+
+function useDirector() {
+  if (!S.hints.director || S.answered) return;
+  S.hints.director = false; this.disabled = true;
+  say(`<b>Режиссёр:</b> ${esc(S.list[S.i].director)}`);
+}
+
+function useCall() {
+  if (!S.hints.call || S.answered) return;
+  S.hints.call = false; this.disabled = true;
+  const q = S.list[S.i], idx = S.i;
+  const friend = FRIENDS[Math.floor(Math.random() * FRIENDS.length)];
+  const box = document.getElementById("say");
+  box.insertAdjacentHTML("beforeend", `<div class="bubble" id="calling"><span class="ring" aria-hidden="true">📞</span> Звоним случайному знакомому: ${esc(friend)}… гудки…</div>`);
+  setTimeout(() => {
+    if (S.i !== idx || !document.getElementById("calling")) return;
+    const r = Math.random();
+    const options = [...screen.querySelectorAll(".opt")].filter(b => !b.classList.contains("gone")).map(b => b.textContent);
+    const wrongs = options.filter(o => o !== q.answer);
+    let reply;
+    if (r < 0.5) reply = `«Слушай, я почти уверен(а): это „${esc(q.answer)}“!»`;
+    else if (r < 0.75 && wrongs.length) reply = `«Хм… Кажется, „${esc(wrongs[Math.floor(Math.random() * wrongs.length)])}“. Но я не ручаюсь.»`;
+    else reply = "«Кто это? Какое кино? Я вообще фильмы не смотрю. Удачи!»";
+    document.getElementById("calling").innerHTML = `<b>${esc(friend)}:</b> ${reply}`;
+    document.getElementById("calling").removeAttribute("id");
+  }, 2200);
+}
+
+/* ===== ФИНАЛ ===== */
+function renderFinal() {
+  stopTimer(); restartBtn.hidden = true;
+  const total = S.main + S.bonus;
+  const rank = RANKS.find(r => total >= r.min);
+  const prev = parseInt(store.get("kinoquiz-best") || "0", 10);
+  const record = total > prev;
+  if (record) store.set("kinoquiz-best", String(total));
+  screen.innerHTML = `
+    <div class="final">
+      <svg class="trophy" viewBox="0 0 200 230" role="img" aria-label="Золотая награда: киноплёночная бобина на пьедестале">
+        <line class="ray" x1="100" y1="8" x2="100" y2="22"/><line class="ray" x1="40" y1="30" x2="50" y2="40"/>
+        <line class="ray" x1="160" y1="30" x2="150" y2="40"/><line class="ray" x1="18" y1="88" x2="32" y2="88"/>
+        <line class="ray" x1="182" y1="88" x2="168" y2="88"/>
+        <circle class="g1" cx="100" cy="88" r="58"/>
+        <circle class="g2" cx="100" cy="88" r="46"/>
+        <circle class="g1" cx="100" cy="88" r="12"/>
+        <circle class="hole" cx="100" cy="58" r="11"/><circle class="hole" cx="126" cy="73" r="11"/>
+        <circle class="hole" cx="126" cy="103" r="11"/><circle class="hole" cx="100" cy="118" r="11"/>
+        <circle class="hole" cx="74" cy="103" r="11"/><circle class="hole" cx="74" cy="73" r="11"/>
+        <rect class="g1" x="88" y="144" width="24" height="26" rx="3"/>
+        <rect class="g2" x="62" y="168" width="76" height="16" rx="3"/>
+        <rect class="g1" x="48" y="184" width="104" height="18" rx="3"/>
+        <rect class="g2" x="36" y="202" width="128" height="20" rx="4"/>
+        <path class="spark" d="M30 52 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4z"/>
+        <path class="spark" d="M168 120 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/>
+        <path class="spark" d="M150 10 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z"/>
+      </svg>
+      <h1 class="display">${esc(rank.title)}</h1>
+      <p class="total">${total} из 15</p>
+      <p class="sub">${esc(rank.text)}${record ? " Это ваш новый рекорд!" : prev ? ` Лучший результат: ${prev} из 15.` : ""}</p>
+      <div class="tally">
+        <div><strong>${S.main}/10</strong>основная программа</div>
+        <div><strong>${S.bonus}/5</strong>бонусный сеанс</div>
+      </div>
+      <button type="button" class="cta" id="again">Новый сеанс</button>
+    </div>`;
+  document.getElementById("again").addEventListener("click", () => { newGame(); renderQuestion(); });
+  document.getElementById("again").focus();
+}
+
+/* ===== ЗАНОВО (в любой момент, двойное нажатие для защиты от случайного клика) ===== */
+restartBtn.addEventListener("click", () => {
+  if (restartBtn.classList.contains("confirm")) {
+    clearTimeout(restartArm); restartBtn.classList.remove("confirm"); restartBtn.textContent = "↺ Заново";
+    renderStart(); return;
+  }
+  restartBtn.classList.add("confirm"); restartBtn.textContent = "Точно? Нажмите ещё раз";
+  restartArm = setTimeout(() => { restartBtn.classList.remove("confirm"); restartBtn.textContent = "↺ Заново"; }, 3000);
+});
+
+renderStart();
+</script>
+</body>
+</html>
